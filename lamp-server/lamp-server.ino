@@ -32,17 +32,13 @@ IPAddress ip(192, 168, 1, 177);
 // (port 80 is default for HTTP):
 EthernetServer server(80);
 
-int RED_MAIN_PIN = 4;
-int RED_SUBSIDIARY_PIN = 5;
-int GREEN_MAIN_PIN = 6;
-int GREEN_SUBSIDIARY_PIN = 7;
+int RED_MAIN_PIN = 6;
+int GREEN_MAIN_PIN = 7;
 
 void setup() {
 
   pinMode(RED_MAIN_PIN, OUTPUT);
-  pinMode(RED_SUBSIDIARY_PIN, OUTPUT);
   pinMode(GREEN_MAIN_PIN, OUTPUT);
-  pinMode(GREEN_SUBSIDIARY_PIN, OUTPUT);
 
   // You can use Ethernet.init(pin) to configure the CS pin
   //Ethernet.init(10);  // Most Arduino shields
@@ -110,20 +106,18 @@ void loop() {
         else if(c == '\n' && currentLineIsBlank && req_str.startsWith("POST")) {
 
 
-          boolean subsidiary = req_str.indexOf("subsidiary") > 0;
           boolean red = req_str.indexOf("/red") > 0;
           boolean green = req_str.indexOf("/green") > 0;
           boolean on = req_str.indexOf("/on") > 0;
 
-          String lampName = getLampName(red, green, subsidiary);
+          String lampName = getLampName(red, green);
           String lampColourStr = red ? "red": green? "green" : "unknown";
-          String subsidiaryStr = subsidiary ? "true": "false";
           String stateStr = on ? "on": "off";
 
-          turnOnOrOffLamp(red, green, subsidiary, on);
+          turnOnOrOffLamp(red, green, on);
        
           printHttpHeadersToClient(client);          
-          printLampStateToClient(lampName, lampColourStr, subsidiaryStr, stateStr, client);
+          printLampStateToClient(lampName, lampColourStr, stateStr, client);
 
           break;
         }
@@ -147,18 +141,14 @@ void loop() {
 void printLampStatusToClient(EthernetClient client){
   client.println();
   client.println("[");
-  printIndividualLampStatusToClient("red-main", "red", "false", digitalRead(RED_MAIN_PIN)? "on": "off", client);
+  printIndividualLampStatusToClient("red-main", "red", digitalRead(RED_MAIN_PIN)? "on": "off", client);
   client.println(",");
-  printIndividualLampStatusToClient("red-subsidiary", "red", "true", digitalRead(RED_SUBSIDIARY_PIN)? "on": "off", client);
-  client.println(",");
-  printIndividualLampStatusToClient("green-main", "green", "false", digitalRead(GREEN_MAIN_PIN)? "on": "off", client);
-  client.println(",");
-  printIndividualLampStatusToClient("green-subsidiary", "green", "true", digitalRead(GREEN_SUBSIDIARY_PIN)? "on": "off", client);
+  printIndividualLampStatusToClient("green-main", "green", digitalRead(GREEN_MAIN_PIN)? "on": "off", client);
   client.print('\n');
   client.println("]");
 }
 
-void printIndividualLampStatusToClient(String name, String colour, String subsidiary, String state, EthernetClient client){
+void printIndividualLampStatusToClient(String name, String colour, String state, EthernetClient client){
   client.println("  {");
   client.print("    \"name\":\"");
   client.print(name);
@@ -166,77 +156,45 @@ void printIndividualLampStatusToClient(String name, String colour, String subsid
   client.print("    \"colour\":\"");
   client.print(colour);
   client.println("\",");
-  client.print("    \"subsidiary\":");
-  client.print(subsidiary);
-  client.println(",");
   client.print("    \"state\":\"");
   client.print(state);
   client.println("\"");
   client.print("  }");  
 }
 
-String getLampName(boolean red, boolean green, boolean subsidiary){
+String getLampName(boolean red, boolean green){
   if(red){
-    if(subsidiary){
-      return "red-subsidiary";
-    }
-    else {
       return "red-main";
-    }
   }
   
   if(green){
-    if(subsidiary){
-      return "green-subsidiary";
-    }
-    else {
       return "green-main";
-    }
   }
   return "unknown";  
 }
 
-void turnOnOrOffLamp(boolean red, boolean green, boolean subsidiary, boolean on){
+void turnOnOrOffLamp(boolean red, boolean green, boolean on){
   if(red){
-    if(subsidiary){
-      if(on){
-        digitalWrite(RED_SUBSIDIARY_PIN, HIGH);  
-      }
-      else {
-        digitalWrite(RED_SUBSIDIARY_PIN, LOW);
-      }
+    if(on){
+      digitalWrite(RED_MAIN_PIN, HIGH);
     }
     else {
-      if(on){
-        digitalWrite(RED_MAIN_PIN, HIGH);
-      }
-      else {
-        digitalWrite(RED_MAIN_PIN, LOW);  
-      }
+      digitalWrite(RED_MAIN_PIN, LOW);  
     }
   }
   
   if(green){
-    if(subsidiary){
-      if(on){
-        digitalWrite(GREEN_SUBSIDIARY_PIN, HIGH);  
-      }
-      else {
-        digitalWrite(GREEN_SUBSIDIARY_PIN, LOW);
-      }
+    if(on){
+      digitalWrite(GREEN_MAIN_PIN, HIGH);
     }
     else {
-      if(on){
-        digitalWrite(GREEN_MAIN_PIN, HIGH);
-      }
-      else {
-        digitalWrite(GREEN_MAIN_PIN, LOW);  
-      }
+      digitalWrite(GREEN_MAIN_PIN, LOW);  
     }
+    
   }  
 }
 
-void printLampStateToClient(String lampName, String colour, String subsidiary, String state, EthernetClient client){
+void printLampStateToClient(String lampName, String colour, String state, EthernetClient client){
   client.println();
   client.println("{");
   client.print("  \"name\":\"");
@@ -245,9 +203,6 @@ void printLampStateToClient(String lampName, String colour, String subsidiary, S
   client.print("  \"colour\":\"");
   client.print(colour);
   client.println("\",");
-  client.print("  \"subsidiary\":");
-  client.print(subsidiary);
-  client.println(",");
   client.print("  \"state\":\"");
   client.print(state);
   client.println("\"");
