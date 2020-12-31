@@ -148,73 +148,22 @@ void loop() {
         }
         else if(c == '\n' && currentLineIsBlank && req_str.startsWith("POST")) {
 
-          String lampName = "";
 
           boolean subsidiary = req_str.indexOf("subsidiary") > 0;
           boolean red = req_str.indexOf("/red") > 0;
           boolean green = req_str.indexOf("/green") > 0;
           boolean on = req_str.indexOf("/on") > 0;
 
-          if(red){
-            if(subsidiary){
-              lampName = "red-subsidiary";
-              if(on){
-                digitalWrite(RED_SUBSIDIARY_PIN, HIGH);  
-              }
-              else {
-                digitalWrite(RED_SUBSIDIARY_PIN, LOW);
-              }
-            }
-            else {
-              lampName = "red-main";
-              if(on){
-                digitalWrite(RED_MAIN_PIN, HIGH);
-              }
-              else {
-                digitalWrite(RED_MAIN_PIN, LOW);  
-              }
-            }
-          }
+          String lampName = getLampName(red, green, subsidiary);
+          String lampColourStr = red ? "red": green? "green" : "unknown";
+          String subsidiaryStr = subsidiary ? "true": "false";
+          String stateStr = on ? "on": "off";
 
-          if(green){
-            if(subsidiary){
-              lampName = "green-subsidiary";
-              if(on){
-                digitalWrite(GREEN_SUBSIDIARY_PIN, HIGH);  
-              }
-              else {
-                digitalWrite(GREEN_SUBSIDIARY_PIN, LOW);
-              }
-            }
-            else {
-              lampName = "green-main";
-              if(on){
-                digitalWrite(GREEN_MAIN_PIN, HIGH);
-              }
-              else {
-                digitalWrite(GREEN_MAIN_PIN, LOW);  
-              }
-            }
-          }
-          printHttpHeadersToClient(client);
+          turnOnOrOffLamp(red, green, subsidiary, on);
+       
+          printHttpHeadersToClient(client);          
+          printLampStateToClient(lampName, lampColourStr, subsidiaryStr, stateStr, client);
 
-          client.println();
-          client.println("{");
-          client.print("  \"name\":\"");
-          client.print(lampName);
-          client.println("\",");
-          client.print("  \"colour\":\"");
-          client.print(red ? "red": "green");
-          client.println("\",");
-          client.print("  \"subsidiary\":");
-          client.print(subsidiary ? "true": "false");
-          client.println(",");
-          client.print("  \"state\":\"");
-          client.print(on ? "on": "off");
-          client.println("\"");
-
-          // output the value of each analog input pin
-          client.println("}");
           break;
         }
         if (c == '\n') {
@@ -232,6 +181,86 @@ void loop() {
     client.stop();
     Serial.println("client disconnected");
   }
+}
+
+String getLampName(boolean red, boolean green, boolean subsidiary){
+  if(red){
+    if(subsidiary){
+      return "red-subsidiary";
+    }
+    else {
+      return "red-main";
+    }
+  }
+  
+  if(green){
+    if(subsidiary){
+      return "green-subsidiary";
+    }
+    else {
+      return "green-main";
+    }
+  }
+  return "unknown";  
+}
+
+void turnOnOrOffLamp(boolean red, boolean green, boolean subsidiary, boolean on){
+  if(red){
+    if(subsidiary){
+      if(on){
+        digitalWrite(RED_SUBSIDIARY_PIN, HIGH);  
+      }
+      else {
+        digitalWrite(RED_SUBSIDIARY_PIN, LOW);
+      }
+    }
+    else {
+      if(on){
+        digitalWrite(RED_MAIN_PIN, HIGH);
+      }
+      else {
+        digitalWrite(RED_MAIN_PIN, LOW);  
+      }
+    }
+  }
+  
+  if(green){
+    if(subsidiary){
+      if(on){
+        digitalWrite(GREEN_SUBSIDIARY_PIN, HIGH);  
+      }
+      else {
+        digitalWrite(GREEN_SUBSIDIARY_PIN, LOW);
+      }
+    }
+    else {
+      if(on){
+        digitalWrite(GREEN_MAIN_PIN, HIGH);
+      }
+      else {
+        digitalWrite(GREEN_MAIN_PIN, LOW);  
+      }
+    }
+  }  
+}
+
+void printLampStateToClient(String lampName, String colour, String subsidiary, String state, EthernetClient client){
+  client.println();
+  client.println("{");
+  client.print("  \"name\":\"");
+  client.print(lampName);
+  client.println("\",");
+  client.print("  \"colour\":\"");
+  client.print(colour);
+  client.println("\",");
+  client.print("  \"subsidiary\":");
+  client.print(subsidiary);
+  client.println(",");
+  client.print("  \"state\":\"");
+  client.print(state);
+  client.println("\"");
+  client.println("}");
+  client.println();
 }
 
 void printHttpHeadersToClient(EthernetClient client){
