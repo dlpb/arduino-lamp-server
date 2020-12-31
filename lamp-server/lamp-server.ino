@@ -35,6 +35,18 @@ EthernetServer server(80);
 int RED_MAIN_PIN = 6;
 int GREEN_MAIN_PIN = 7;
 
+String GET = "GET";
+String POST = "POST";
+
+String RED = "red";
+String GREEN = "green";
+String UNKNOWN = "unknown";
+
+String fieldEnd = "\",";
+String fieldNameStart = "    \"";
+String fieldNameEnd = "\":\"";
+
+
 void setup() {
 
   pinMode(RED_MAIN_PIN, OUTPUT);
@@ -117,7 +129,7 @@ void loop() {
           turnOnOrOffLamp(red, green, on);
        
           printHttpHeadersToClient(client);          
-          printLampStateToClient(lampName, lampColourStr, stateStr, client);
+          printIndividualLampStateToClient(lampName, lampColourStr, stateStr, client);
 
           break;
         }
@@ -136,16 +148,6 @@ void loop() {
     client.stop();
     Serial.println("client disconnected");
   }
-}
-
-void printLampStatusToClient(EthernetClient client){
-  client.println();
-  client.println("[");
-  printLampStateToClient("red-main", "red", digitalRead(RED_MAIN_PIN)? "on": "off", client);
-  client.println(",");
-  printLampStateToClient("green-main", "green", digitalRead(GREEN_MAIN_PIN)? "on": "off", client);
-  client.print('\n');
-  client.println("]");
 }
 
 String getLampName(boolean red, boolean green){
@@ -180,25 +182,49 @@ void turnOnOrOffLamp(boolean red, boolean green, boolean on){
   }  
 }
 
-void printLampStateToClient(String lampName, String colour, String state, EthernetClient client){
+void printLampStatusToClient(EthernetClient client){
+  client.println();
+  client.println("[");
+  printIndividualLampStateToClient("red-main", "red", digitalRead(RED_MAIN_PIN)? "on": "off", client);
+  client.println(",");
+  printIndividualLampStateToClient("green-main", "green", digitalRead(GREEN_MAIN_PIN)? "on": "off", client);
+  client.print('\n');
+  client.println("]");
+}
+
+void printIndividualLampStateToClient(String lampName, String colour, String state, EthernetClient client){
   client.println();
   client.println("{");
-  client.print("  \"name\":\"");
-  client.print(lampName);
-  client.println("\",");
-  client.print("  \"colour\":\"");
-  client.print(colour);
-  client.println("\",");
-  client.print("  \"state\":\"");
-  client.print(state);
-  client.println("\"");
+  printJsonFieldToClient("name", lampName, client);
+  printJsonFieldToClient("colour", colour, client);
+  printLastJsonFieldToClient("state", state, client);
   client.println("}");
   client.println();
 }
 
-void printHttpHeadersToClient(EthernetClient client){
+void printJsonFieldToClient(String fieldName, String fieldValue, EthernetClient client){
+  client.print(fieldNameStart);
+  client.print(fieldName);
+  client.print(fieldNameEnd);
+  client.print(fieldValue);
+  client.println(fieldEnd);  
+}
+
+void printLastJsonFieldToClient(String name, String value, EthernetClient client) {
+  client.print(fieldNameStart);
+  client.print(name);
+  client.print(fieldNameEnd);
+  client.print(value);
+  client.println("\"");
+}
+
+void printSharedHttpHeaders(EthernetClient client){
   client.println("HTTP/1.1 200 OK");
-  client.println("Content-Type: application/json");
   client.println("Connection: close");
   client.println("Cache-Control: no-cache, no-store, max-age=0, must-revalidate"); 
+}
+
+void printHttpHeadersToClient(EthernetClient client){
+  printSharedHttpHeaders(client);
+  client.println("Content-Type: application/json");
 }
