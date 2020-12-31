@@ -141,25 +141,11 @@ void loop() {
 void printLampStatusToClient(EthernetClient client){
   client.println();
   client.println("[");
-  printIndividualLampStatusToClient("red-main", "red", digitalRead(RED_MAIN_PIN)? "on": "off", client);
+  printLampStateToClient("red-main", "red", digitalRead(RED_MAIN_PIN)? "on": "off", client);
   client.println(",");
-  printIndividualLampStatusToClient("green-main", "green", digitalRead(GREEN_MAIN_PIN)? "on": "off", client);
+  printLampStateToClient("green-main", "green", digitalRead(GREEN_MAIN_PIN)? "on": "off", client);
   client.print('\n');
   client.println("]");
-}
-
-void printIndividualLampStatusToClient(String name, String colour, String state, EthernetClient client){
-  client.println("  {");
-  client.print("    \"name\":\"");
-  client.print(name);
-  client.println("\",");
-  client.print("    \"colour\":\"");
-  client.print(colour);
-  client.println("\",");
-  client.print("    \"state\":\"");
-  client.print(state);
-  client.println("\"");
-  client.print("  }");  
 }
 
 String getLampName(boolean red, boolean green){
