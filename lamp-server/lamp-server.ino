@@ -102,11 +102,8 @@ void loop() {
         // character) and the line is blank, the http request has ended,
         // so you can send a reply
         if (c == '\n' && currentLineIsBlank && req_str.startsWith("GET")) {
-          client.println("HTTP/1.1 200 OK");
-          client.println("Content-Type: application/json");
-          client.println("Connection: close");  // the connection will be closed after completion of the response
-          client.println("Cache-Control: no-cache, no-store, max-age=0, must-revalidate");  // the connection will be closed after completion of the response
-
+          printHttpHeadersToClient(client);
+          
           client.println();
           client.println("[");
 
@@ -199,11 +196,7 @@ void loop() {
               }
             }
           }
-          
-          client.println("HTTP/1.1 200 OK");
-          client.println("Content-Type: application/json");
-          client.println("Connection: close");  // the connection will be closed after completion of the response
-          client.println("Cache-Control: no-cache, no-store, max-age=0, must-revalidate");  // the connection will be closed after completion of the response
+          printHttpHeadersToClient(client);
 
           client.println();
           client.println("{");
@@ -239,4 +232,11 @@ void loop() {
     client.stop();
     Serial.println("client disconnected");
   }
+}
+
+void printHttpHeadersToClient(EthernetClient client){
+  client.println("HTTP/1.1 200 OK");
+  client.println("Content-Type: application/json");
+  client.println("Connection: close");
+  client.println("Cache-Control: no-cache, no-store, max-age=0, must-revalidate"); 
 }
