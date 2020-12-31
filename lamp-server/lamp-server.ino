@@ -155,13 +155,13 @@ void loop() {
 
 String getLampName(boolean red, boolean green){
   if(red){
-      return "red-main";
+      return RED;
   }
   
   if(green){
-      return "green-main";
+      return GREEN;
   }
-  return "unknown";  
+  return UNKNOWN;  
 }
 
 void turnOnOrOffLamp(boolean red, boolean green, boolean on){
