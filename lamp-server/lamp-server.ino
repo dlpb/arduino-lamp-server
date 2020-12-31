@@ -121,13 +121,13 @@ void loop() {
         else if(c == '\n' && currentLineIsBlank && req_str.startsWith("POST")) {
 
 
-          boolean red = req_str.indexOf("/red") > 0;
-          boolean green = req_str.indexOf("/green") > 0;
-          boolean on = req_str.indexOf("/on") > 0;
+          boolean red = req_str.indexOf(RED) > 0;
+          boolean green = req_str.indexOf(GREEN) > 0;
+          boolean on = req_str.indexOf(ON) > 0;
 
           String lampName = getLampName(red, green);
-          String lampColourStr = red ? "red": green? "green" : "unknown";
-          String stateStr = on ? "on": "off";
+          String lampColourStr = red ? RED: green? GREEN : UNKNOWN;
+          String stateStr = on ? ON : OFF;
 
           turnOnOrOffLamp(red, green, on);
        
