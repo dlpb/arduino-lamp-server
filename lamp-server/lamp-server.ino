@@ -35,6 +35,9 @@ EthernetServer server(80);
 int RED_MAIN_PIN = 6;
 int GREEN_MAIN_PIN = 7;
 
+String ON = "on";
+String OFF = "off";
+
 String GET = "GET";
 String POST = "POST";
 
@@ -185,9 +188,9 @@ void turnOnOrOffLamp(boolean red, boolean green, boolean on){
 void printLampStatusToClient(EthernetClient client){
   client.println();
   client.println("[");
-  printIndividualLampStateToClient("red-main", "red", digitalRead(RED_MAIN_PIN)? "on": "off", client);
+  printIndividualLampStateToClient(RED, RED, digitalRead(RED_MAIN_PIN)? ON: OFF, client);
   client.println(",");
-  printIndividualLampStateToClient("green-main", "green", digitalRead(GREEN_MAIN_PIN)? "on": "off", client);
+  printIndividualLampStateToClient(GREEN, GREEN, digitalRead(GREEN_MAIN_PIN)? ON: OFF, client);
   client.print('\n');
   client.println("]");
 }
