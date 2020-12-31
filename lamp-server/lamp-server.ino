@@ -49,6 +49,8 @@ String fieldEnd = "\",";
 String fieldNameStart = "    \"";
 String fieldNameEnd = "\":\"";
 
+String statusStr = "/status";
+
 
 void setup() {
 
@@ -113,9 +115,17 @@ void loop() {
         // character) and the line is blank, the http request has ended,
         // so you can send a reply
         if (c == '\n' && currentLineIsBlank && req_str.startsWith("GET")) {
-          printHttpHeadersToClient(client);
-          
-          printLampStatusToClient(client);
+          Serial.println("Status Page");
+          if(req_str.indexOf(statusStr) > 0) {
+            printHttpHeadersToClient(client);
+            client.println(); //extra line break needed for http standard
+            printLampStatusToClient(client);
+          }
+          else {
+            printHttpHtmlHeadersToClient(client);
+            client.println(); //extra line break needed for http standard
+            printStatusPage(client);
+          }
           break;
         }
         else if(c == '\n' && currentLineIsBlank && req_str.startsWith("POST")) {
@@ -131,7 +141,8 @@ void loop() {
 
           turnOnOrOffLamp(red, green, on);
        
-          printHttpHeadersToClient(client);          
+          printHttpHeadersToClient(client); 
+          client.println(); //extra line break needed for http standard         
           printIndividualLampStateToClient(lampName, lampColourStr, stateStr, client);
 
           break;
@@ -221,6 +232,91 @@ void printLastJsonFieldToClient(String name, String value, EthernetClient client
   client.println("\"");
 }
 
+void printStatusPage(EthernetClient client) {
+  String th = "<th>";
+  String thc = "</th>";
+  
+  client.println("<html>");
+  client.println("<head>");
+  client.println("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1, shrink-to-fit=no\">");
+  client.println("<title>Lamp</title>");
+  client.println("<link rel=\"stylesheet\" href=\"https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css\" integrity=\"sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh\" crossorigin=\"anonymous\">");
+  client.println("</head>");
+  client.println("<body>");
+  client.println("<table class=\"table\">");
+
+  printTableRowToClient(RED, digitalRead(RED_MAIN_PIN)? ON: OFF, client);
+  printTableRowToClient(GREEN, digitalRead(GREEN_MAIN_PIN)? ON: OFF, client);
+  
+  client.println("</table>");
+
+  String astart = "<a href=\"";
+  String amiddle = "\">";
+  String aend = "</a> ";
+
+  client.print(astart);
+  client.print(statusStr);
+  client.print(amiddle);
+  client.print(statusStr);
+  client.print(aend);
+  client.print(astart);
+  client.print("https://git.io/JL7eL");
+  client.print(amiddle);
+  client.print("Git");
+  client.print(aend);
+
+  client.println("</body>");
+  client.println("</html>"); 
+}
+
+void printTableRowToClient(String name, String state, EthernetClient client){
+  String td = "<td>";
+  String tdc = "</td>";
+
+  String form = "<form method=\"POST\" action=\"/";
+  String formc = "</form>";
+
+  String button = "<button class=\"btn btn-primary\"> Turn ";
+  String buttonc = "</button>";
+
+  String slash = "/";
+  String actionClose = "\">";
+  
+  client.println("<tr>");
+  client.print(td);
+  client.print(name);
+  client.println(tdc);
+  client.println(td);
+  client.print(state);
+  client.println(tdc);
+  client.println(td);
+  if(state == OFF) {
+    client.print(form);
+    client.print(name);
+    client.print(slash);
+    client.print(ON);
+    client.println(actionClose);
+    client.print(button);
+    client.print(ON);
+    client.println(buttonc);
+    client.println(formc);
+  }
+  else if(state == ON) {
+    client.print(form);
+    client.print(name);
+    client.print(slash);
+    client.print(OFF);
+    client.println(actionClose);
+    client.print(button);
+    client.print(OFF);
+    client.println(buttonc);
+    client.println(formc);
+  }
+  client.println(tdc);
+  client.println("</tr>");
+}
+
+
 void printSharedHttpHeaders(EthernetClient client){
   client.println("HTTP/1.1 200 OK");
   client.println("Connection: close");
@@ -230,4 +326,9 @@ void printSharedHttpHeaders(EthernetClient client){
 void printHttpHeadersToClient(EthernetClient client){
   printSharedHttpHeaders(client);
   client.println("Content-Type: application/json");
+}
+
+void printHttpHtmlHeadersToClient(EthernetClient client){
+  printSharedHttpHeaders(client);
+  client.println("Content-Type: text/html");
 }
