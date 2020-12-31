@@ -104,46 +104,7 @@ void loop() {
         if (c == '\n' && currentLineIsBlank && req_str.startsWith("GET")) {
           printHttpHeadersToClient(client);
           
-          client.println();
-          client.println("[");
-
-          client.println("  {");
-          client.println("    \"name\":\"red-main\",");
-          client.println("    \"colour\":\"red\",");
-          client.println("    \"subsidiary\":false,");
-          client.print("    \"state\":\"");
-          client.print(digitalRead(RED_MAIN_PIN)? "on": "off");
-          client.println("\"");
-          client.println("  },");
-          
-          client.println("  {");
-          client.println("    \"name\":\"red-subsidiary\",");
-          client.println("    \"colour\":\"red\",");
-          client.println("    \"subsidiary\":true,");
-          client.print("    \"state\":\"");
-          client.print(digitalRead(RED_SUBSIDIARY_PIN)? "on": "off");
-          client.println("\"");
-          client.println("  },");
-          
-          client.println("  {");
-          client.println("    \"name\":\"green-main\",");
-          client.println("    \"colour\":\"green\",");
-          client.println("    \"subsidiary\":false,");
-          client.print("    \"state\":\"");
-          client.print(digitalRead(GREEN_MAIN_PIN)? "on": "off");
-          client.println("\"");
-          client.println("  },");
-           
-          client.println("  {");
-          client.println("    \"name\":\"green-subsidiary\",");
-          client.println("    \"colour\":\"green\",");
-          client.println("    \"subsidiary\":true,");
-          client.print("    \"state\":\"");
-          client.print(digitalRead(GREEN_SUBSIDIARY_PIN)? "on": "off");
-          client.println("\"");
-          client.println("  }");          
-
-          client.println("]");
+          printLampStatusToClient(client);
           break;
         }
         else if(c == '\n' && currentLineIsBlank && req_str.startsWith("POST")) {
@@ -181,6 +142,37 @@ void loop() {
     client.stop();
     Serial.println("client disconnected");
   }
+}
+
+void printLampStatusToClient(EthernetClient client){
+  client.println();
+  client.println("[");
+  printIndividualLampStatusToClient("red-main", "red", "false", digitalRead(RED_MAIN_PIN)? "on": "off", client);
+  client.println(",");
+  printIndividualLampStatusToClient("red-subsidiary", "red", "true", digitalRead(RED_SUBSIDIARY_PIN)? "on": "off", client);
+  client.println(",");
+  printIndividualLampStatusToClient("green-main", "green", "false", digitalRead(GREEN_MAIN_PIN)? "on": "off", client);
+  client.println(",");
+  printIndividualLampStatusToClient("green-subsidiary", "green", "true", digitalRead(GREEN_SUBSIDIARY_PIN)? "on": "off", client);
+  client.print('\n');
+  client.println("]");
+}
+
+void printIndividualLampStatusToClient(String name, String colour, String subsidiary, String state, EthernetClient client){
+  client.println("  {");
+  client.print("    \"name\":\"");
+  client.print(name);
+  client.println("\",");
+  client.print("    \"colour\":\"");
+  client.print(colour);
+  client.println("\",");
+  client.print("    \"subsidiary\":");
+  client.print(subsidiary);
+  client.println(",");
+  client.print("    \"state\":\"");
+  client.print(state);
+  client.println("\"");
+  client.print("  }");  
 }
 
 String getLampName(boolean red, boolean green, boolean subsidiary){
